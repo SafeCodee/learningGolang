@@ -1,7 +1,7 @@
 {
-  "current_chapter": 4,
-  "completed_chapters": [1, 2, 3],
-  "last_session_date": "2025-10-22",
+  "current_chapter": 5,
+  "completed_chapters": [1, 2, 3, 4],
+  "last_session_date": "2025-10-23",
   "total_chapters": 25,
-  "notes": "Глава 3: Отлично освоил управляющие конструкции - все формы for, for-range с _, switch без fallthrough, метки для вложенных циклов. Быстро схватывает продвинутые концепции. Знает про улучшения в Java 14+ switch."
+  "notes": "Глава 4: Отлично освоил функции - вариадические параметры, множественный возврат, обработку ошибок без exceptions, defer, замыкания (closures), функции высшего порядка. Сразу провёл параллель с Java lambdas и Stream API. Код чистый, только мелкие стилистические замечания. Задал правильный вопрос про closures/higher-order functions - значит думает критически. Готов к главе 5."
 }

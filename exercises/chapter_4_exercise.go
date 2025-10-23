@@ -51,13 +51,30 @@ func calculator(a, b int, operation string) (int, error) {
 // TODO: Напиши функцию makeMultiplier, которая принимает factor (int)
 // и возвращает функцию, умножающую число на factor.
 // Пример: double := makeMultiplier(2)
-//         fmt.Println(double(5)) // 10
+//
+//	fmt.Println(double(5)) // 10
+//
 // Это замыкание (closure)!
+func makeMultiplier(factor int) func(int) int {
+	return func(value int) int {
+		return value * factor
+	}
+}
 
 // TODO: Напиши функцию processNumbers, которая принимает слайс чисел []int
 // и функцию-обработчик func(int) int, применяет обработчик к каждому элементу
 // и возвращает новый слайс с результатами.
 // Это пример функции высшего порядка (higher-order function)
+
+func processNumbers(numbers []int, function func(value int) int) []int {
+	var result []int
+
+	for _, value := range numbers {
+		result = append(result, function(value))
+	}
+
+	return result
+}
 
 func averageReport(array ...float64) {
 	avg, length := average(array...)
@@ -65,6 +82,8 @@ func averageReport(array ...float64) {
 }
 
 func main() {
+
+	defer fmt.Println("Program finished!")
 	// TODO: Протестируй функцию average
 	// Вызови с разными наборами чисел: (10, 20, 30), (5.5), ()
 	// Выведи результат в формате: "Average of [10 20 30] is 20.00 (count: 3)"
@@ -94,11 +113,20 @@ func main() {
 	// TODO: Протестируй функцию makeMultiplier
 	// Создай функции: double (множитель 2), triple (множитель 3)
 	// Примени их к числу 7 и выведи результаты
+	double := makeMultiplier(2)
+	fmt.Printf("double %d\n", double(7))
+	triple := makeMultiplier(3)
+	fmt.Printf("triple %d\n", triple(7))
 
 	// TODO: Протестируй функцию processNumbers
 	// Создай слайс чисел: []int{1, 2, 3, 4, 5}
 	// Создай функцию-обработчик, которая возводит число в квадрат
 	// Передай в processNumbers и выведи результат
+	ints := []int{1, 2, 3, 4, 5}
+	numbers := processNumbers(ints, func(value int) int {
+		return value * value
+	})
+	fmt.Println(numbers)
 
 	// BONUS TODO: Используй defer для вывода "Program finished!" в самом конце main
 	// defer должен быть объявлен В НАЧАЛЕ функции main, но выполнится в конце
