@@ -1,0 +1,7 @@
+{
+  "current_chapter": 4,
+  "completed_chapters": [1, 2, 3],
+  "last_session_date": "2025-10-22",
+  "total_chapters": 25,
+  "notes": "Глава 3: Отлично освоил управляющие конструкции - все формы for, for-range с _, switch без fallthrough, метки для вложенных циклов. Быстро схватывает продвинутые концепции. Знает про улучшения в Java 14+ switch."
+}
