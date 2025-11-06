@@ -273,6 +273,103 @@ slices.Index(s, x)       // индекс элемента или -1
 
 ---
 
+## Мапы (глава 6)
+
+### Объявление и инициализация
+```go
+// Объявление (nil-мапа, нельзя использовать!)
+var m map[string]int
+
+// Создание с make
+m := make(map[string]int)
+m := make(map[string]int, 100)  // с hint для ёмкости
+
+// Литерал
+ages := map[string]int{
+    "Alice": 25,
+    "Bob":   30,
+}
+```
+
+### Основные операции
+```go
+// Добавление/обновление
+m["key"] = value
+
+// Чтение
+value := m["key"]  // 0 если ключа нет (zero value)
+
+// Проверка существования ключа (важно!)
+value, ok := m["key"]
+if ok {
+    // ключ существует
+}
+
+// Идиома
+if value, ok := m["key"]; ok {
+    // работа с value
+}
+
+// Удаление
+delete(m, "key")
+
+// Длина
+len(m)
+```
+
+### Итерация
+```go
+// Ключ и значение
+for key, value := range m {
+    fmt.Printf("%s: %d\n", key, value)
+}
+
+// Только ключи
+for key := range m {
+    fmt.Println(key)
+}
+
+// Только значения
+for _, value := range m {
+    fmt.Println(value)
+}
+```
+
+⚠️ **Порядок итерации случайный!** Go намеренно рандомизирует порядок при каждом запуске.
+
+### Nil-мапа vs пустая мапа
+```go
+var m1 map[string]int        // nil-мапа
+m2 := make(map[string]int)   // пустая мапа
+
+fmt.Println(m1 == nil)  // true
+fmt.Println(m2 == nil)  // false
+
+len(m1)     // 0 (OK)
+x := m1["key"]  // OK, вернёт zero value
+m1["key"] = 1   // ❌ PANIC!
+
+m2["key"] = 1   // ✅ OK
+```
+
+### Вложенные мапы
+```go
+// map[string]map[string]int
+scores := map[string]map[string]int{
+    "Alice": {
+        "Math": 90,
+        "Physics": 85,
+    },
+}
+
+// Динамическое создание
+scores := make(map[string]map[string]int)
+scores["Bob"] = make(map[string]int)  // ❗ Нужно создать вложенную мапу
+scores["Bob"]["Math"] = 75
+```
+
+---
+
 ## Сравнение с Java
 
 | Go | Java | Заметки |
@@ -292,6 +389,15 @@ slices.Index(s, x)       // индекс элемента или -1
 | `s[1:4]` | `list.subList(1, 4)` | Оба создают view |
 | `len(s)` | `list.size()` | |
 | `slices.Equal(a, b)` | `list.equals(other)` | Go 1.21+ |
+| **Мапы** |
+| `map[string]int` | `Map<String, Integer>` | Встроенный тип в Go |
+| `make(map[K]V)` | `new HashMap<>()` | |
+| `m[key] = value` | `m.put(key, value)` | |
+| `value := m[key]` | `value = m.get(key)` | Zero value если ключа нет |
+| `value, ok := m[key]` | `m.containsKey(key)` | Проверка существования |
+| `delete(m, key)` | `m.remove(key)` | |
+| `len(m)` | `m.size()` | |
+| `for k, v := range m` | `for (Entry<K,V> e : m.entrySet())` | Порядок случайный! |
 | **Управление потоком** |
 | `for` | `for`, `while`, `do-while` | В Go только for |
 | `switch` (без break) | `switch` (нужен break) | |
@@ -307,8 +413,9 @@ import "errors"   // создание ошибок
 import "slices"   // операции со слайсами (Go 1.21+)
 import "strings"  // работа со строками
 import "strconv"  // конвертация строк
+import "sort"     // сортировка слайсов и базовых типов
 ```
 
 ---
 
-**Обновлено:** 2025-11-05 (главы 1-5 завершены)
+**Обновлено:** 2025-11-06 (главы 1-6 завершены)
