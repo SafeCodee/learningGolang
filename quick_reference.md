@@ -492,6 +492,12 @@ func swap(a, b int) (int, int) {
 | `func f(n int)` | `void f(int n)` | Передача примитива по значению |
 | `func f(obj *Type)` | `void f(Object obj)` | Передача объекта: явно vs неявно |
 | `nil` | `null` | Отсутствие значения для указателя |
+| **Структуры и методы** |
+| `type Person struct {...}` | `class Person {...}` | Структура vs класс |
+| `p.Name` | `p.getName()` | Прямой доступ к полям |
+| `func (p Person) Method()` | `public void method()` | Value receiver vs метод класса |
+| `func (p *Person) Method()` | `public void method()` | Pointer receiver (изменяет) |
+| Композиция через встраивание | Наследование | Замена наследования |
 | **Управление потоком** |
 | `for` | `for`, `while`, `do-while` | В Go только for |
 | `switch` (без break) | `switch` (нужен break) | |
@@ -644,4 +650,110 @@ type User struct {
 
 ---
 
-**Обновлено:** 2025-11-12 (главы 1-8 завершены)
+## Методы (глава 9)
+
+### Определение методов
+```go
+// Value receiver (получатель по значению)
+func (r Rectangle) Area() float64 {
+    return r.Width * r.Height
+}
+
+// Pointer receiver (получатель-указатель)
+func (r *Rectangle) Scale(factor float64) {
+    r.Width *= factor
+    r.Height *= factor
+}
+```
+
+### Синтаксис
+```go
+func (receiverName ReceiverType) MethodName(params) returnType {
+    // тело метода
+}
+```
+
+**Компоненты:**
+- `receiverName` — имя переменной receiver (обычно 1-2 буквы)
+- `ReceiverType` — тип, к которому привязывается метод
+- Заглавная буква = public, строчная = private
+
+### Value receiver vs Pointer receiver
+
+**Value receiver (копия структуры):**
+```go
+func (c Counter) Increment() {
+    c.Count++  // изменяет КОПИЮ, не влияет на оригинал
+}
+```
+
+**Pointer receiver (указатель на оригинал):**
+```go
+func (c *Counter) Increment() {
+    c.Count++  // изменяет ОРИГИНАЛ
+}
+```
+
+### Когда использовать каждый тип
+
+**Pointer receiver:**
+- ✅ Метод изменяет структуру
+- ✅ Структура большая (копирование дорого)
+- ✅ Консистентность: если один метод pointer — обычно все pointer
+
+**Value receiver:**
+- ✅ Метод только читает данные
+- ✅ Структура маленькая (несколько примитивов)
+- ✅ Иммутабельность: гарантия что метод не изменит структуру
+
+### Автоматическая разыменовка
+```go
+counter := Counter{Count: 0}
+counter.Increment()  // Go автоматически: (&counter).Increment()
+
+ptr := &Counter{Count: 0}
+ptr.Increment()      // Go автоматически: (*ptr).Increment() для value receiver
+```
+
+### Методы на custom типах
+```go
+type Celsius float64
+
+func (c Celsius) ToFahrenheit() Fahrenheit {
+    return Fahrenheit(c*9.0/5 + 32)
+}
+
+temp := Celsius(100.0)
+fmt.Println(temp.ToFahrenheit())  // 212
+```
+
+### Примеры
+```go
+type BankAccount struct {
+    Owner   string
+    Balance float64
+}
+
+// Value receiver — только читает
+func (a BankAccount) CheckBalance() {
+    fmt.Printf("%s's balance: $%.2f\n", a.Owner, a.Balance)
+}
+
+// Pointer receiver — изменяет баланс
+func (a *BankAccount) Deposit(amount float64) {
+    a.Balance += amount
+}
+
+// Pointer receiver — изменяет и возвращает bool
+func (a *BankAccount) Withdraw(amount float64) bool {
+    if amount <= a.Balance {
+        a.Balance -= amount
+        return true
+    }
+    return false
+}
+```
+
+---
+
+**Обновлено:** 2025-11-13 (главы 1-9 завершены)
