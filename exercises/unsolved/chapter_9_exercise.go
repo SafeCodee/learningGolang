@@ -55,10 +55,10 @@ func (b *Book) Reset() {
 	fmt.Printf("Book reset to the beginning\n")
 }
 
-// TODO: Определи структуру BankAccount с полями:
+// TODO: Определи структуру BankAccount1 с полями:
 // - Owner (string)
 // - Balance (float64)
-type BankAccount struct {
+type BankAccount1 struct {
 	Owner   string
 	Balance float64
 }
@@ -66,7 +66,7 @@ type BankAccount struct {
 // TODO: Создай метод Deposit(amount float64) с pointer receiver
 // Добавляет amount к Balance
 // Выводит: "Deposited $X. New balance: $Y"
-func (a *BankAccount) Deposit(amount float64) {
+func (a *BankAccount1) Deposit(amount float64) {
 	a.Balance += amount
 	fmt.Printf("Deposited %v. New balance: %v\n", amount, a.Balance)
 }
@@ -74,7 +74,7 @@ func (a *BankAccount) Deposit(amount float64) {
 // TODO: Создай метод Withdraw(amount float64) bool с pointer receiver
 // Если amount <= Balance, вычитает amount из Balance, выводит успешное сообщение и возвращает true
 // Если amount > Balance, выводит "Insufficient funds" и возвращает false
-func (a *BankAccount) Withdraw(amount float64) bool {
+func (a *BankAccount1) Withdraw(amount float64) bool {
 	if amount <= a.Balance {
 		a.Balance -= amount
 		fmt.Println("Withdraw success")
@@ -87,7 +87,7 @@ func (a *BankAccount) Withdraw(amount float64) bool {
 
 // TODO: Создай метод CheckBalance() с value receiver
 // Выводит: "Owner's balance: $Balance"
-func (a BankAccount) CheckBalance() {
+func (a BankAccount1) CheckBalance() {
 	fmt.Printf("Owner's balance: %v\n", a.Balance)
 }
 
@@ -144,7 +144,7 @@ func main() {
 
 	fmt.Println("\n=== Bank Account Testing ===")
 	// TODO: Создай банковский счёт для "Alice" с балансом 1000.0
-	account := BankAccount{
+	account := BankAccount1{
 		Owner:   "Alice",
 		Balance: 1000.0,
 	}

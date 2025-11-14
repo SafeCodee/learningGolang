@@ -756,4 +756,252 @@ func (a *BankAccount) Withdraw(amount float64) bool {
 
 ---
 
-**Обновлено:** 2025-11-13 (главы 1-9 завершены)
+## Интерфейсы (глава 10)
+
+### Определение интерфейса
+```go
+type Shape interface {
+    Area() float64
+    Perimeter() float64
+}
+```
+
+### Неявная реализация (duck typing)
+```go
+type Rectangle struct {
+    Width, Height float64
+}
+
+// Rectangle автоматически реализует Shape
+func (r Rectangle) Area() float64 {
+    return r.Width * r.Height
+}
+
+func (r Rectangle) Perimeter() float64 {
+    return 2 * (r.Width + r.Height)
+}
+```
+
+**Ключевое отличие от Java:**
+- Нет `implements` — тип реализует интерфейс, если имеет все его методы
+- "Если ходит как утка и крякает как утка, то это утка"
+
+### Полиморфизм
+```go
+func PrintShapeInfo(s Shape) {
+    fmt.Printf("Area: %.2f, Perimeter: %.2f\n", s.Area(), s.Perimeter())
+}
+
+rect := Rectangle{Width: 5, Height: 3}
+circ := Circle{Radius: 4}
+
+PrintShapeInfo(rect)  // ✅ Работает
+PrintShapeInfo(circ)  // ✅ Работает
+```
+
+### Пустой интерфейс (interface{} или any)
+```go
+// Любой тип реализует пустой интерфейс
+func PrintAnything(v interface{}) {
+    fmt.Println(v)
+}
+
+// Go 1.18+ - псевдоним any
+func PrintAnything(v any) {
+    fmt.Println(v)
+}
+
+PrintAnything(42)       // int
+PrintAnything("hello")  // string
+PrintAnything([]int{})  // slice
+```
+
+### Type Assertion (приведение типа)
+```go
+var i interface{} = "hello"
+
+// Небезопасное (panic если тип не тот)
+s := i.(string)
+
+// Безопасное (с проверкой)
+s, ok := i.(string)
+if ok {
+    fmt.Println("Это строка:", s)
+}
+```
+
+### Type Switch
+```go
+func ProcessValue(v interface{}) {
+    switch val := v.(type) {  // Присваивание конкретного типа
+    case int:
+        fmt.Printf("Integer: %d\n", val)
+    case string:
+        fmt.Printf("String: %s\n", val)
+    case bool:
+        fmt.Printf("Boolean: %t\n", val)
+    case Shape:
+        PrintShapeInfo(val)
+    default:
+        fmt.Printf("Unknown type: %T\n", v)
+    }
+}
+```
+
+### Value vs Pointer Receiver в интерфейсах
+
+**Важное правило:**
+
+| Метод | Интерфейс реализуют |
+|-------|---------------------|
+| `func (t Type) Method()` | И `Type`, и `*Type` |
+| `func (t *Type) Method()` | **ТОЛЬКО** `*Type` |
+
+```go
+type Incrementer interface {
+    Increment()
+}
+
+type Counter struct {
+    Value int
+}
+
+// Pointer receiver
+func (c *Counter) Increment() {
+    c.Value++
+}
+
+c := Counter{Value: 0}
+// var inc Incrementer = c   // ❌ Ошибка!
+var inc Incrementer = &c     // ✅ Только *Counter реализует
+```
+
+### Встроенные интерфейсы
+
+**fmt.Stringer** — кастомное строковое представление:
+```go
+type Product struct {
+    Name  string
+    Price float64
+}
+
+func (p Product) String() string {
+    return fmt.Sprintf("Product: %s, Price: $%.2f", p.Name, p.Price)
+}
+
+// fmt.Println автоматически использует String()
+fmt.Println(product)  // Product: Laptop, Price: $999.00
+```
+
+**error** — обработка ошибок:
+```go
+type MyError struct {
+    Code    int
+    Message string
+}
+
+func (e MyError) Error() string {
+    return fmt.Sprintf("Error %d: %s", e.Code, e.Message)
+}
+```
+
+**io.Reader/Writer** — работа с потоками:
+```go
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+```
+
+### Композиция интерфейсов
+```go
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+
+// ReadWriter объединяет оба интерфейса
+type ReadWriter interface {
+    Reader
+    Writer
+}
+```
+
+### Лучшие практики
+
+**1. Маленькие интерфейсы (1-3 метода):**
+```go
+// ✅ Хорошо
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+
+// ❌ Плохо (слишком много методов)
+type HugeInterface interface {
+    Method1()
+    Method2()
+    Method3()
+    Method4()
+    Method5()
+}
+```
+
+**2. Принимай интерфейсы, возвращай структуры:**
+```go
+// ✅ Хорошо
+func ProcessData(r io.Reader) *Result { ... }
+
+// ❌ Плохо
+func ProcessData(f *os.File) io.Reader { ... }
+```
+
+**3. Определяй интерфейсы у потребителя:**
+```go
+// В package consumer
+type Storage interface {
+    Save(data string) error
+}
+
+func ProcessAndSave(s Storage, data string) {
+    s.Save(data)
+}
+
+// В package implementations
+type FileStorage struct { ... }
+func (f FileStorage) Save(data string) error { ... }
+```
+
+### Проверка реализации интерфейса (compile-time)
+```go
+// Убедиться что Dog реализует Speaker
+var _ Speaker = Dog{}
+var _ Speaker = (*Dog)(nil)  // Для pointer receiver
+```
+
+### Nil интерфейс
+```go
+var s Speaker  // nil
+
+if s == nil {
+    fmt.Println("Interface is nil")
+}
+
+// s.Speak()  // panic!
+
+// ⚠️ Интерфейс с nil-указателем != nil интерфейс:
+var c *Counter  // nil указатель
+var inc Incrementer = c  // интерфейс НЕ nil!
+if inc == nil {
+    // НЕ выполнится!
+}
+```
+
+---
+
+**Обновлено:** 2025-11-14 (главы 1-10 завершены)

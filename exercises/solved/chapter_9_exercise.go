@@ -40,20 +40,20 @@ func (b *Book) Reset() {
 	fmt.Println("Book reset to the beginning")
 }
 
-// Структура BankAccount для управления балансом
-type BankAccount struct {
+// Структура BankAccount1 для управления балансом
+type BankAccount1 struct {
 	Owner   string
 	Balance float64
 }
 
 // Deposit добавляет деньги на счёт (pointer receiver - изменяет баланс)
-func (a *BankAccount) Deposit(amount float64) {
+func (a *BankAccount1) Deposit(amount float64) {
 	a.Balance += amount
 	fmt.Printf("Deposited $%.2f. New balance: $%.2f\n", amount, a.Balance)
 }
 
 // Withdraw снимает деньги со счёта (pointer receiver - изменяет баланс)
-func (a *BankAccount) Withdraw(amount float64) bool {
+func (a *BankAccount1) Withdraw(amount float64) bool {
 	if amount <= a.Balance {
 		a.Balance -= amount
 		fmt.Printf("Withdrew $%.2f. New balance: $%.2f\n", amount, a.Balance)
@@ -64,7 +64,7 @@ func (a *BankAccount) Withdraw(amount float64) bool {
 }
 
 // CheckBalance выводит текущий баланс (value receiver - только читает)
-func (a BankAccount) CheckBalance() {
+func (a BankAccount1) CheckBalance() {
 	fmt.Printf("%s's balance: $%.2f\n", a.Owner, a.Balance)
 }
 
@@ -106,7 +106,7 @@ func main() {
 	fmt.Printf("Progress after reset: %.2f%%\n", book.Progress())
 
 	fmt.Println("\n=== Bank Account Testing ===")
-	account := BankAccount{
+	account := BankAccount1{
 		Owner:   "Alice",
 		Balance: 1000.0,
 	}
