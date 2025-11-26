@@ -22,6 +22,14 @@ func (i *InsufficientFundsError) Error() string {
 	return fmt.Sprintf("недостаточно средств: запрошено %.2f, доступно %.2f", i.Requested, i.Available)
 }
 
+func (i *InsufficientFundsError) Is(target error) bool {
+	_, ok := target.(*InsufficientFundsError)
+	if ok {
+		return true
+	}
+	return false
+}
+
 // TODO: Создай sentinel error ErrNegativeAmount с сообщением "сумма не может быть отрицательной"
 var ErrNegativeAmount = errors.New("сумма не может быть отрицательной")
 
@@ -160,8 +168,10 @@ func main() {
 	balance, err = processTransactions(100.0, amounts)
 	if err != nil {
 		fmt.Println(err)
+		errors.As(err, &myError)
+		fmt.Println(myError)
 		if errors.Is(err, ErrNegativeAmount) || errors.Is(err, &InsufficientFundsError{}) {
-
+			fmt.Println("It's ErrNegativeAmount or InsufficientFundsError")
 		}
 	}
 }
