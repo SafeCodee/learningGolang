@@ -1004,4 +1004,238 @@ if inc == nil {
 
 ---
 
-**Обновлено:** 2025-11-14 (главы 1-10 завершены)
+## Обработка ошибок (глава 11)
+
+### Интерфейс error
+```go
+type error interface {
+    Error() string
+}
+```
+
+### Создание ошибок
+```go
+// errors.New
+err := errors.New("что-то пошло не так")
+
+// fmt.Errorf (с форматированием)
+err := fmt.Errorf("файл %s не найден", filename)
+
+// Кастомные ошибки
+type MyError struct {
+    Code    int
+    Message string
+}
+
+func (e MyError) Error() string {
+    return fmt.Sprintf("код %d: %s", e.Code, e.Message)
+}
+```
+
+### Обработка ошибок (идиома)
+```go
+result, err := doSomething()
+if err != nil {
+    // обработка ошибки
+    return err
+}
+// продолжаем если err == nil
+```
+
+### Wrapping errors (Go 1.13+)
+```go
+// Оборачивание с %w
+if err != nil {
+    return fmt.Errorf("не удалось прочитать файл: %w", err)
+}
+
+// Проверка типа ошибки
+if errors.Is(err, fs.ErrNotExist) {
+    fmt.Println("Файл не существует")
+}
+
+// Извлечение конкретного типа
+var pathErr *fs.PathError
+if errors.As(err, &pathErr) {
+    fmt.Println("Ошибка пути:", pathErr.Path)
+}
+```
+
+### Sentinel errors
+```go
+var (
+    ErrNotFound = errors.New("не найдено")
+    ErrInvalid  = errors.New("недопустимое значение")
+)
+
+// Проверка
+if errors.Is(err, ErrNotFound) {
+    // обработка
+}
+```
+
+### Panic и Recover
+```go
+// panic — для критических ошибок
+func divide(a, b int) int {
+    if b == 0 {
+        panic("деление на ноль")
+    }
+    return a / b
+}
+
+// recover — для восстановления
+func safeCall() {
+    defer func() {
+        if r := recover(); r != nil {
+            fmt.Println("Восстановлено:", r)
+        }
+    }()
+
+    panic("что-то сломалось")  // recover перехватит
+}
+```
+
+**⚠️ Правило:** Используй `error` для обычных ошибок, `panic` только для критических ситуаций (программная логика нарушена).
+
+---
+
+## Пакеты и модули (глава 12)
+
+### Видимость (export)
+```go
+// Заглавная буква — экспортируется (public)
+func Add(a, b int) int { ... }
+type Person struct { ... }
+const MaxSize = 100
+
+// Строчная буква — не экспортируется (private)
+func multiply(a, b int) int { ... }
+type person struct { ... }
+const minSize = 10
+```
+
+### Объявление пакета
+```go
+package main       // Исполняемый пакет (с main())
+package mathutil  // Библиотечный пакет
+```
+
+### Импорт пакетов
+```go
+// Стандартная библиотека
+import "fmt"
+import "net/http"
+
+// Внешние зависимости
+import "github.com/gorilla/mux"
+
+// Локальные пакеты (из текущего модуля)
+import "myproject/handlers"
+import "myproject/models"
+
+// Множественный импорт
+import (
+    "fmt"
+    "net/http"
+    "myproject/handlers"
+)
+
+// Алиас
+import (
+    "math/rand"
+    cryptorand "crypto/rand"
+)
+
+// Только для side effects (вызов init)
+import _ "github.com/lib/pq"
+```
+
+### Go модули (go.mod)
+```bash
+# Инициализация модуля
+go mod init myproject
+go mod init github.com/username/myproject
+
+# Управление зависимостями
+go get github.com/gorilla/mux@v1.8.0   # Добавить/обновить
+go mod tidy                             # Убрать неиспользуемые
+go get -u ./...                         # Обновить все
+go mod download                         # Скачать зависимости
+
+# Просмотр зависимостей
+go list -m all                          # Список всех
+go mod graph                            # Граф зависимостей
+go mod why github.com/lib/pq            # Зачем нужна эта зависимость
+```
+
+### Структура go.mod
+```
+module github.com/username/myproject
+
+go 1.21
+
+require (
+    github.com/gorilla/mux v1.8.0
+    github.com/lib/pq v1.10.9
+)
+```
+
+### Семантическое версионирование (SemVer)
+```
+v1.8.0
+ │ │ │
+ │ │ └─ PATCH (багфиксы)
+ │ └─── MINOR (новые функции, обратная совместимость)
+ └───── MAJOR (breaking changes)
+
+// Импорт мажорных версий > v1
+import "github.com/some/package/v2"
+import "github.com/some/package/v3"
+```
+
+### Структура проекта
+```
+myproject/
+├── go.mod                # Определение модуля
+├── go.sum                # Контрольные суммы зависимостей
+├── main.go               # package main (точка входа)
+├── handlers/
+│   └── user.go           # package handlers
+├── models/
+│   └── user.go           # package models
+└── internal/             # Приватные пакеты (только для myproject)
+    └── auth/
+        └── token.go      # package auth
+```
+
+### Функция init()
+```go
+package database
+
+import "fmt"
+
+// Вызывается автоматически при импорте пакета
+func init() {
+    fmt.Println("Инициализация БД")
+}
+
+// Порядок выполнения:
+// 1. Инициализация переменных пакета
+// 2. init()
+// 3. main() (если package main)
+```
+
+### internal/ пакеты
+```
+myproject/
+└── internal/
+    └── secret/
+        └── secret.go  # Доступен только внутри myproject
+```
+
+Другие проекты **не смогут** импортировать `myproject/internal/secret`.
+
+---
+
+**Обновлено:** 2025-11-28 (главы 1-12 завершены)
