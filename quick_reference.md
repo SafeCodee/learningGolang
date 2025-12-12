@@ -1238,4 +1238,177 @@ myproject/
 
 ---
 
-**Обновлено:** 2025-11-28 (главы 1-12 завершены)
+## Defer, Panic, Recover (глава 13)
+
+### Defer — отложенное выполнение
+```go
+// Базовый синтаксис
+func example() {
+    defer fmt.Println("выполнится в конце")
+    fmt.Println("выполнится сначала")
+}
+
+// Работа с ресурсами
+func readFile(filename string) error {
+    file, err := os.Open(filename)
+    if err != nil {
+        return err
+    }
+    defer file.Close()  // ✅ ПОСЛЕ проверки ошибки!
+
+    // работа с файлом
+    return nil
+}
+
+// Разблокировка мьютекса
+func criticalSection() {
+    mu.Lock()
+    defer mu.Unlock()
+    // критическая секция
+}
+```
+
+### Порядок выполнения (LIFO/стек)
+```go
+defer fmt.Println("1")
+defer fmt.Println("2")
+defer fmt.Println("3")
+// Выполнится: 3, 2, 1
+```
+
+### Defer и аргументы
+```go
+// Аргументы вычисляются сразу
+x := 10
+defer fmt.Println(x)  // 10 (зафиксировано здесь)
+x = 20                // defer выведет 10, не 20
+
+// Для актуального значения используй замыкание
+defer func() {
+    fmt.Println(x)    // 20 (актуальное)
+}()
+```
+
+### Изменение именованного возврата
+```go
+func modifyReturn() (result int) {
+    result = 10
+    defer func() {
+        result = 20  // изменяет возвращаемое значение
+    }()
+    return  // вернёт 20, не 10
+}
+```
+
+### Panic — критические ошибки
+```go
+func divide(a, b int) int {
+    if b == 0 {
+        panic("division by zero")  // аварийное завершение
+    }
+    return a / b
+}
+
+// ⚠️ Используй panic ТОЛЬКО для критических ошибок!
+// Для обычных ошибок используй error
+```
+
+### Recover — перехват паники
+```go
+func safeDivide(a, b int) (result int, err error) {
+    defer func() {
+        if r := recover(); r != nil {
+            err = fmt.Errorf("перехвачена паника: %v", r)
+        }
+    }()
+
+    result = divide(a, b)  // может вызвать панику
+    return result, nil
+}
+
+// ✅ recover работает ТОЛЬКО внутри defer
+```
+
+### Паттерны использования
+
+**Измерение времени:**
+```go
+func measureTime(name string) func() {
+    start := time.Now()
+    return func() {
+        fmt.Printf("%s took %v\n", name, time.Since(start))
+    }
+}
+
+func slowFunc() {
+    defer measureTime("slowFunc")()  // обрати внимание на ()()
+    time.Sleep(1 * time.Second)
+}
+```
+
+**Defer в циклах:**
+```go
+// ❌ Неправильно (все файлы закроются в конце функции)
+for _, filename := range files {
+    f, _ := os.Open(filename)
+    defer f.Close()  // накапливаются!
+}
+
+// ✅ Правильно (вынести в отдельную функцию)
+for _, filename := range files {
+    processFile(filename)
+}
+
+func processFile(filename string) {
+    f, _ := os.Open(filename)
+    defer f.Close()  // закроется сразу после обработки
+}
+```
+
+**Логирование выхода:**
+```go
+func operation() (err error) {
+    defer func() {
+        if err != nil {
+            log.Printf("Ошибка: %v", err)
+        } else {
+            log.Println("Успешно завершено")
+        }
+    }()
+
+    // основная логика
+    return nil
+}
+```
+
+### Важные правила
+
+**❗ defer для ресурсов — ПОСЛЕ проверки ошибки:**
+```go
+// ❌ ОПАСНО
+file, err := os.Open(filename)
+defer file.Close()  // если err != nil, file == nil → panic!
+if err != nil {
+    return err
+}
+
+// ✅ ПРАВИЛЬНО
+file, err := os.Open(filename)
+if err != nil {
+    return err
+}
+defer file.Close()  // теперь file точно не nil
+```
+
+### Сравнение с Java
+
+| Go | Java | Заметки |
+|---|---|---|
+| `defer f()` | `finally { f(); }` | defer проще и читабельнее |
+| `panic("error")` | `throw new RuntimeException()` | panic только для критических ошибок |
+| `recover()` | `catch (Exception e)` | recover только в defer |
+| `err != nil` | `try-catch` | Обычные ошибки → error, не panic |
+
+---
+
+**Обновлено:** 2025-12-12 (главы 1-13 завершены)
